@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}{{ project['name'] }} — {{ t('rules_title') }}{% endblock %}
+{% block content %}
+<div class="page-card">
+  <div class="detail-header">
+    <a href="{{ url_for('projects') }}" class="btn-back">&#8592; {{ t('back') }}</a>
+    <h1>{{ project['name'] }}</h1>
+    <span class="domain-badge">{{ project['domain'] }}</span>
+  </div>
+
+  <div class="tabs">
+    <a href="{{ url_for('detail', project_id=project['id'], tab='keys') }}" class="tab">{{ t('tab_keys') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='frontend') }}" class="tab">{{ t('tab_frontend') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='backend') }}" class="tab">{{ t('tab_backend') }}</a>
+    <a href="{{ url_for('rules', project_id=project['id']) }}" class="tab active">{{ t('tab_rules') }}</a>
+    <a href="{{ url_for('logs', project_id=project['id']) }}" class="tab">{{ t('tab_logs') }}</a>
+    <a href="{{ url_for('fields', project_id=project['id']) }}" class="tab">{{ t('tab_fields') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='testing') }}" class="tab">{{ t('tab_testing') }}</a>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-header-row">
+      <h3>{{ t('rules_title') }}</h3>
+      {% if not edit_rule and not adding %}
+        <a href="{{ url_for('rules', project_id=project['id'], add=1) }}" class="btn-primary">+ {{ t('rules_add') }}</a>
+      {% endif %}
+    </div>
+
+    {% if adding or edit_rule %}
+    <div class="rule-form-box">
+      <h4>{{ t('rules_edit') if edit_rule else t('rules_add') }}</h4>
+      <form method="POST" id="ruleForm">
+        <input type="hidden" name="action" value="{{ 'update' if edit_rule else 'create' }}">
+        {% if edit_rule %}<input type="hidden" name="rule_id" value="{{ edit_rule['id'] }}">{% endif %}
+
+        <div class="form-group">
+          <label>{{ t('rules_name') }}</label>
+          <input type="text" name="name" value="{{ edit_rule['name'] if edit_rule else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('rules_conditions') }}</label>
+          <p class="conditions-hint">{{ t('rules_conditions_hint') }}</p>
+          <div id="conditionsContainer">
+            {# Conditions will be populated by JS below #}
+          </div>
+          <button type="button" class="btn-secondary" onclick="addCondition()">+ {{ t('rules_add_condition') }}</button>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('rules_action') }}</label>
+          <select name="rule_action">
+            <option value="block" {{ 'selected' if not edit_rule or edit_rule['action'] == 'block' }}>{{ t('rules_block') }}</option>
+            <option value="allow" {{ 'selected' if edit_rule and edit_rule['action'] == 'allow' }}>{{ t('rules_allow') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ t('rules_priority') }}</label>
+          <input type="number" name="priority" value="{{ edit_rule['priority'] if edit_rule else 0 }}" min="0">
+        </div>
+        <div class="form-group">
+          <label class="toggle-switch-label">
+            <div class="toggle-switch">
+              <input type="checkbox" name="is_active" value="1" {{ 'checked' if not edit_rule or edit_rule['is_active'] }}>
+              <span class="toggle-slider"></span>
+            </div>
+            <span>{{ t('rules_active') }}</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">{{ t('rules_save') }}</button>
+          <a href="{{ url_for('rules', project_id=project['id']) }}" class="btn-secondary">{{ t('rules_cancel') }}</a>
+        </div>
+      </form>
+    </div>
+
+    <script>
+    var conditionLabels = {
+      'ip': '{{ t("rules_type_ip") }}',
+      'ip_range': '{{ t("rules_type_ip_range") }}',
+      'user_agent': '{{ t("rules_type_user_agent") }}',
+      'header': '{{ t("rules_type_header") }}',
+      'score': '{{ t("rules_type_score") }}'
+    };
+    var conditionIdx = 0;
+
+    function addCondition(ctype, cvalue, headerName, headerValue) {
+      ctype = ctype || 'ip';
+      cvalue = cvalue || '';
+      headerName = headerName || '';
+      headerValue = headerValue || '';
+
+      var container = document.getElementById('conditionsContainer');
+      var row = document.createElement('div');
+      row.className = 'condition-row';
+      row.setAttribute('data-idx', conditionIdx);
+
+      var isHeader = (ctype === 'header');
+
+      var html = '<div class="condition-row-inner">';
+      html += '<select name="condition_type[]" class="condition-type-select" onchange="toggleConditionHeader(this)">';
+      var types = ['ip', 'ip_range', 'user_agent', 'header', 'score'];
+      for (var i = 0; i < types.length; i++) {
+        var sel = types[i] === ctype ? ' selected' : '';
+        html += '<option value="' + types[i] + '"' + sel + '>' + conditionLabels[types[i]] + '</option>';
+      }
+      html += '</select>';
+
+      html += '<div class="condition-value-wrap" style="display:' + (isHeader ? 'none' : 'block') + ';">';
+      html += '<input type="text" name="condition_value[]" class="condition-value-input" value="' + escapeAttr(cvalue) + '" placeholder="{{ t("rules_value") }}">';
+      html += '</div>';
+
+      html += '<div class="condition-header-wrap" style="display:' + (isHeader ? 'flex' : 'none') + ';">';
+      html += '<input type="text" name="header_name[]" value="' + escapeAttr(headerName) + '" placeholder="Header Name">';
+      html += '<input type="text" name="header_value[]" value="' + escapeAttr(headerValue) + '" placeholder="Header Value">';
+      html += '</div>';
+
+      html += '<button type="button" class="btn-icon danger condition-remove-btn" onclick="removeCondition(this)" title="{{ t("rules_delete") }}">&#10005;</button>';
+      html += '</div>';
+
+      row.innerHTML = html;
+      container.appendChild(row);
+      conditionIdx++;
+    }
+
+    function removeCondition(btn) {
+      var row = btn.closest('.condition-row');
+      if (row) row.remove();
+    }
+
+    function toggleConditionHeader(select) {
+      var row = select.closest('.condition-row');
+      var valueWrap = row.querySelector('.condition-value-wrap');
+      var headerWrap = row.querySelector('.condition-header-wrap');
+      if (select.value === 'header') {
+        valueWrap.style.display = 'none';
+        headerWrap.style.display = 'flex';
+      } else {
+        valueWrap.style.display = 'block';
+        headerWrap.style.display = 'none';
+      }
+    }
+
+    function escapeAttr(s) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(s));
+      return d.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    // Pre-populate conditions for edit mode
+    {% if edit_rule and edit_conditions %}
+      {% for cond in edit_conditions %}
+        {% if cond['condition_type'] == 'header' %}
+          {% set hdata = cond['condition_value']|fromjson %}
+          addCondition('header', '', '{{ hdata.get("name", "")|e }}', '{{ hdata.get("value", "")|e }}');
+        {% else %}
+          addCondition('{{ cond["condition_type"]|e }}', '{{ cond["condition_value"]|e }}', '', '');
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      // New rule — start with one empty condition
+      addCondition();
+    {% endif %}
+    </script>
+    {% endif %}
+
+    {% if not rules %}
+      <div class="empty-state">{{ t('rules_empty') }}</div>
+    {% else %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ t('rules_name') }}</th>
+            <th>{{ t('rules_conditions') }}</th>
+            <th>{{ t('rules_action') }}</th>
+            <th>{{ t('rules_priority') }}</th>
+            <th>{{ t('logs_status') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rule in rules %}
+          <tr class="{{ 'inactive-row' if not rule['is_active'] }}">
+            <td>{{ rule['name'] }}</td>
+            <td>
+              {% set conds = rule_conditions.get(rule['id'], []) %}
+              {% if conds %}
+                {% for c in conds %}
+                  <span class="condition-tag">
+                    <strong>{{ t('rules_type_' + c['condition_type']) }}</strong>:
+                    {% if c['condition_type'] == 'header' %}
+                      {% set hd = c['condition_value']|fromjson %}
+                      {{ hd.get('name', '') }} = {{ hd.get('value', '') }}
+                    {% else %}
+                      {{ c['condition_value'][:40] }}
+                    {% endif %}
+                  </span>
+                {% endfor %}
+              {% else %}
+                <span class="condition-tag empty">—</span>
+              {% endif %}
+            </td>
+            <td><span class="action-badge {{ rule['action'] }}">{{ t('rules_block') if rule['action'] == 'block' else t('rules_allow') }}</span></td>
+            <td>{{ rule['priority'] }}</td>
+            <td>
+              <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="rule_id" value="{{ rule['id'] }}">
+                <label class="toggle-switch" onclick="event.preventDefault(); this.closest('form').submit()">
+                  <input type="checkbox" {{ 'checked' if rule['is_active'] }}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </form>
+            </td>
+            <td class="actions-cell">
+              <a href="{{ url_for('rules', project_id=project['id'], edit=rule['id']) }}" class="btn-icon" title="Edit">&#9998;</a>
+              <form method="POST" style="display:inline;" onsubmit="return confirm('{{ t('rules_delete_confirm') }}?')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="rule_id" value="{{ rule['id'] }}">
+                <button type="submit" class="btn-icon danger">&#10005;</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

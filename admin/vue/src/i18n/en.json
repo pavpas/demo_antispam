@@ -1,0 +1,182 @@
+{
+  "app": {
+    "title": "AntiSpam Shield",
+    "subtitle": "Control Panel"
+  },
+  "nav": {
+    "projects": "Projects",
+    "logout": "Logout"
+  },
+  "auth": {
+    "title": "Sign In",
+    "username": "Username",
+    "password": "Password",
+    "login": "Sign In",
+    "error": "Invalid username or password"
+  },
+  "projects": {
+    "title": "Projects",
+    "add": "Add Project",
+    "name": "Name",
+    "domain": "Domain",
+    "stats": "Statistics",
+    "details": "Details",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete project \"{name}\"?",
+    "empty": "No projects yet. Create your first one!",
+    "created": "Project created",
+    "deleted": "Project deleted"
+  },
+  "newProject": {
+    "title": "New Project",
+    "namePlaceholder": "My Website",
+    "domainPlaceholder": "example.com",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "tabs": {
+      "keys": "Keys",
+      "frontend": "Frontend Integration",
+      "backend": "Server Integration",
+      "testing": "Testing",
+      "rules": "Filter Rules",
+      "logs": "Logs",
+      "fields": "Fields"
+    },
+    "keys": {
+      "public": "Public Key",
+      "private": "Private Key",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "warning": "Never expose the private key! Use it only on the server side."
+    },
+    "frontend": {
+      "title": "JavaScript SDK Integration",
+      "autoTitle": "Option 1: Automatic mode (auto=1, default)",
+      "autoDesc": "The script will automatically find all forms on the page and protect them. Forms added dynamically (AJAX, SPA) are also auto-detected.",
+      "autoStep": "Add to <head> or before </body> of your website:",
+      "manualTitle": "Option 2: Manual mode (auto=0)",
+      "manualDesc": "The script loads and collects behavioral data, but does not protect forms automatically. You choose which forms to protect using CSS selectors.",
+      "manualStep": "Include the script with auto=0 parameter:",
+      "manualExamples": "Then protect the forms you need by selector:",
+      "byId": "By element ID:",
+      "byClass": "By CSS class (all forms with this class):",
+      "bySelector": "By any CSS selector or DOM element:",
+      "paramNote": "URL parameter auto: auto=1 (default) — protect all forms automatically, auto=0 — manual protection only.",
+      "note": "The SDK automatically adds a hidden _antispam_token field to each protected form before submission."
+    },
+    "backend": {
+      "title": "Server-Side Verification",
+      "description": "After form submission, your server will receive the _antispam_token field. Send it to our API for verification:",
+      "endpoint": "Verification Endpoint",
+      "request": "Request",
+      "response": "Response",
+      "examples": "Integration Examples",
+      "scoreNote": "score — rating from 0.0 (bot) to 1.0 (human). Recommended threshold: 0.5"
+    },
+    "testing": {
+      "title": "Test Form",
+      "description": "Test the antispam integration for this project. Fill out the form and submit — the SDK will collect behavioral signals and generate a token, then the server will verify it.",
+      "formName": "Name",
+      "formEmail": "Email",
+      "formMessage": "Message",
+      "submit": "Submit Form",
+      "verifying": "Verifying...",
+      "resultHuman": "Human detected!",
+      "resultBot": "Bot detected or verification failed.",
+      "resultError": "Verification error",
+      "noToken": "No _antispam_token found. SDK may not have loaded.",
+      "score": "Score",
+      "success": "Success"
+    },
+    "rules": {
+      "title": "Filter Rules",
+      "add": "Add Rule",
+      "edit": "Edit Rule",
+      "name": "Rule Name",
+      "type": "Type",
+      "value": "Value",
+      "action": "Action",
+      "block": "Block",
+      "allow": "Allow",
+      "priority": "Priority",
+      "active": "Active",
+      "inactive": "Inactive",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteConfirm": "Delete rule \"{name}\"?",
+      "empty": "No filter rules. Add rules to filter suspicious traffic.",
+      "typeIp": "IP Address",
+      "typeIpRange": "IP Range (CIDR)",
+      "typeUserAgent": "User-Agent",
+      "typeHeader": "HTTP Header",
+      "typeScore": "Score Threshold",
+      "placeholderIp": "192.168.1.100",
+      "placeholderIpRange": "10.0.0.0/8",
+      "placeholderUa": "BadBot",
+      "placeholderHeaderName": "Header Name",
+      "placeholderHeaderValue": "Header Value",
+      "placeholderScore": "0.3",
+      "conditions": "Conditions",
+      "conditionsHint": "all must match — AND logic",
+      "addCondition": "Add Condition"
+    },
+    "fields": {
+      "title": "Custom Fields",
+      "add": "Add Field",
+      "name": "Field Name",
+      "empty": "No custom fields. Add fields to enable log filtering by custom parameters.",
+      "delete": "Delete",
+      "deleteConfirm": "Delete field \"{name}\"?",
+      "placeholder": "e.g. form, method, source"
+    },
+    "logs": {
+      "title": "Verification Logs",
+      "all": "All",
+      "successful": "Successful",
+      "blocked": "Blocked",
+      "filtered": "Filtered",
+      "date": "Date/Time",
+      "ip": "IP Address",
+      "userAgent": "User-Agent",
+      "score": "Score",
+      "status": "Status",
+      "rule": "Matched Rule",
+      "noLogs": "No logs for selected filter",
+      "human": "Human",
+      "bot": "Bot",
+      "filterBlocked": "Filtered",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page",
+      "filterIp": "Filter by IP...",
+      "data": "Data",
+      "allValues": "All"
+    }
+  },
+  "stats": {
+    "title": "Statistics",
+    "total": "Total Requests",
+    "successful": "Successful (Human)",
+    "rejected": "Rejected (Bot)",
+    "chart": "Requests by Day",
+    "period": "Period",
+    "last7": "7 days",
+    "last30": "30 days",
+    "last90": "90 days",
+    "noData": "No data for selected period",
+    "customRange": "Custom range",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "show": "Show"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "back": "Back",
+    "save": "Save",
+    "close": "Close"
+  }
+}

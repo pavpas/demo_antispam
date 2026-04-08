@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ t('stats_title') }} — {{ project['name'] }}{% endblock %}
+{% block content %}
+<div class="page-card">
+  <div class="detail-header">
+    <a href="{{ url_for('projects') }}" class="btn-back">&#8592; {{ t('back') }}</a>
+    <h1>{{ t('stats_title') }}: {{ project['name'] }}</h1>
+    <span class="domain-badge">{{ project['domain'] }}</span>
+  </div>
+
+  <div class="period-selector">
+    <span>{{ t('stats_period') }}:</span>
+    <a href="{{ url_for('stats', project_id=project['id'], days=7, **field_url_params) }}" class="btn-sm {{ 'active' if days == 7 and not custom_from }}">{{ t('stats_7d') }}</a>
+    <a href="{{ url_for('stats', project_id=project['id'], days=30, **field_url_params) }}" class="btn-sm {{ 'active' if days == 30 and not custom_from }}">{{ t('stats_30d') }}</a>
+    <a href="{{ url_for('stats', project_id=project['id'], days=90, **field_url_params) }}" class="btn-sm {{ 'active' if days == 90 and not custom_from }}">{{ t('stats_90d') }}</a>
+
+    <form method="GET" action="{{ url_for('stats', project_id=project['id']) }}" style="display:inline-flex; align-items:center; gap:0.3rem; margin-left:0.5rem;">
+      <input type="hidden" name="days" value="{{ days }}">
+      {% for fname, fval in field_filters.items() %}
+        <input type="hidden" name="field_{{ fname }}" value="{{ fval }}">
+      {% endfor %}
+      <span>{{ t('stats_custom_range') }}:</span>
+      <label style="font-size:0.85rem;">{{ t('stats_from') }}</label>
+      <input type="date" name="from_date" value="{{ custom_from }}" style="font-size:0.85rem;">
+      <label style="font-size:0.85rem;">{{ t('stats_to') }}</label>
+      <input type="date" name="to_date" value="{{ custom_to }}" style="font-size:0.85rem;">
+      <button type="submit" class="btn-sm">{{ t('stats_show') }}</button>
+    </form>
+  </div>
+
+  {% if project_fields %}
+  <div class="logs-filters" style="margin-bottom: 1rem;">
+    <form method="GET" action="{{ url_for('stats', project_id=project['id']) }}" style="display:inline-flex; align-items:center; gap:0.3rem;">
+      <input type="hidden" name="days" value="{{ days }}">
+      {% if custom_from %}
+        <input type="hidden" name="from_date" value="{{ custom_from }}">
+        <input type="hidden" name="to_date" value="{{ custom_to }}">
+      {% endif %}
+      {% for fname in project_fields %}
+      <select name="field_{{ fname }}" onchange="this.form.submit()" class="field-filter">
+        <option value="">{{ fname }}: {{ t('logs_all_fields') }}</option>
+        {% for val in field_options.get(fname, []) %}
+          <option value="{{ val }}" {{ 'selected' if field_filters.get(fname) == val }}>{{ val }}</option>
+        {% endfor %}
+      </select>
+      {% endfor %}
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-value">{{ totals['total'] or 0 }}</div>
+      <div class="stat-label">{{ t('stats_total') }}</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-value">{{ totals['success'] or 0 }}</div>
+      <div class="stat-label">{{ t('stats_success') }}</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-value">{{ totals['rejected'] or 0 }}</div>
+      <div class="stat-label">{{ t('stats_rejected') }}</div>
+    </div>
+  </div>
+
+  <h3>{{ t('stats_chart') }}</h3>
+  {% if not daily %}
+    <p class="empty-state">{{ t('stats_no_data') }}</p>
+  {% else %}
+    <div class="chart-container">
+      <canvas id="statsChart"></canvas>
+    </div>
+    <script>
+    var chartData = {{ chart_data|safe }};
+    new Chart(document.getElementById('statsChart'), {
+      type: 'line',
+      data: {
+        labels: chartData.labels,
+        datasets: [
+          { label: '{{ t("stats_success") }}', data: chartData.success, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.3 },
+          { label: '{{ t("stats_rejected") }}', data: chartData.rejected, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

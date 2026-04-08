@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ project['name'] }} — {{ t('logs_title') }}{% endblock %}
+{% block content %}
+<div class="page-card">
+  <div class="detail-header">
+    <a href="{{ url_for('projects') }}" class="btn-back">&#8592; {{ t('back') }}</a>
+    <h1>{{ project['name'] }}</h1>
+    <span class="domain-badge">{{ project['domain'] }}</span>
+  </div>
+
+  <div class="tabs">
+    <a href="{{ url_for('detail', project_id=project['id'], tab='keys') }}" class="tab">{{ t('tab_keys') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='frontend') }}" class="tab">{{ t('tab_frontend') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='backend') }}" class="tab">{{ t('tab_backend') }}</a>
+    <a href="{{ url_for('rules', project_id=project['id']) }}" class="tab">{{ t('tab_rules') }}</a>
+    <a href="{{ url_for('logs', project_id=project['id']) }}" class="tab active">{{ t('tab_logs') }}</a>
+    <a href="{{ url_for('fields', project_id=project['id']) }}" class="tab">{{ t('tab_fields') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='testing') }}" class="tab">{{ t('tab_testing') }}</a>
+  </div>
+
+  <div class="tab-content">
+    <h3>{{ t('logs_title') }}</h3>
+
+    <div class="logs-filters">
+      <div class="sub-tabs">
+        {% for s, label in [('all', 'logs_all'), ('success', 'logs_successful'), ('blocked', 'logs_blocked'), ('filtered', 'logs_filtered')] %}
+          <a href="{{ url_for('logs', project_id=project['id'], status=s, page=1, ip=ip_filter, **field_url_params) }}" class="sub-tab {{ 'active' if status == s }}">{{ t(label) }}</a>
+        {% endfor %}
+      </div>
+      <form method="GET" action="{{ url_for('logs', project_id=project['id']) }}" class="ip-filter-form">
+        <input type="hidden" name="status" value="{{ status }}">
+        {% for fname, fval in field_filters.items() %}
+          <input type="hidden" name="field_{{ fname }}" value="{{ fval }}">
+        {% endfor %}
+        <input type="text" name="ip" value="{{ ip_filter }}" placeholder="{{ t('logs_filter_ip') }}" class="ip-filter">
+        <button type="submit" class="btn-sm">&#128269;</button>
+        {% for fname in project_fields %}
+        <select name="field_{{ fname }}" onchange="this.form.submit()" class="field-filter">
+          <option value="">{{ fname }}: {{ t('logs_all_fields') }}</option>
+          {% for val in field_options.get(fname, []) %}
+            <option value="{{ val }}" {{ 'selected' if field_filters.get(fname) == val }}>{{ val }}</option>
+          {% endfor %}
+        </select>
+        {% endfor %}
+      </form>
+    </div>
+
+    {% if not logs %}
+      <div class="empty-state">{{ t('logs_no_data') }}</div>
+    {% else %}
+      <table class="data-table logs-table">
+        <thead>
+          <tr>
+            <th>{{ t('logs_date') }}</th>
+            <th>{{ t('logs_ip') }}</th>
+            <th>{{ t('logs_ua') }}</th>
+            <th>{{ t('logs_score') }}</th>
+            <th>{{ t('logs_status') }}</th>
+            <th>{{ t('logs_rule') }}</th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          {% set has_details = log_field_values.get(log['id']) or log['custom_data'] %}
+          <tr{% if has_details %} class="log-row-expandable" onclick="toggleLogDetail({{ log['id'] }})"{% endif %}>
+            <td class="date-cell">{{ log['created_at']|fmtdate }}</td>
+            <td>{{ log['ip_address'] or '-' }}</td>
+            <td class="ua-cell" title="{{ log['user_agent'] or '' }}">{{ (log['user_agent'] or '-')[:30] }}{{ '...' if (log['user_agent'] or '')|length > 30 }}</td>
+            <td><span class="score-value {{ 'good' if (log['score'] or 0) >= 0.5 else 'bad' }}">{{ '%.2f'|format(log['score'] or 0) }}</span></td>
+            <td>
+              {% if (log['filter_action'] or '') == 'blocked' %}
+                <span class="status-badge filtered">{{ t('logs_filter_blocked') }}</span>
+              {% elif log['is_human'] %}
+                <span class="status-badge human">{{ t('logs_human') }}</span>
+              {% else %}
+                <span class="status-badge bot">{{ t('logs_bot') }}</span>
+              {% endif %}
+            </td>
+            <td>{{ log['matched_rule_name'] or '-' }}</td>
+            <td class="expand-cell">
+              {% if has_details %}
+                <span class="log-expand-btn" id="log-arrow-{{ log['id'] }}">&#9654;</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% if has_details %}
+          <tr class="log-detail-row" id="log-detail-{{ log['id'] }}" style="display:none">
+            <td colspan="7" class="log-detail-content">
+              {% if log_field_values.get(log['id']) %}
+                <div class="log-detail-fields">
+                  {% for fname, fval in log_field_values[log['id']].items() %}
+                    <span class="log-field-tag"><strong>{{ fname }}:</strong> {{ fval }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              {% if log['custom_data'] %}
+                <div class="log-detail-data"><strong>Data:</strong> {{ log['custom_data'] }}</div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+          <a href="{{ url_for('logs', project_id=project['id'], status=status, page=page-1, ip=ip_filter, **field_url_params) }}" class="btn-sm">{{ t('logs_prev') }}</a>
+        {% else %}
+          <span class="btn-sm disabled">{{ t('logs_prev') }}</span>
+        {% endif %}
+        <span class="page-info">{{ t('logs_page') }} {{ page }} / {{ total_pages }} ({{ total }})</span>
+        {% if page < total_pages %}
+          <a href="{{ url_for('logs', project_id=project['id'], status=status, page=page+1, ip=ip_filter, **field_url_params) }}" class="btn-sm">{{ t('logs_next') }}</a>
+        {% else %}
+          <span class="btn-sm disabled">{{ t('logs_next') }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+<script>
+function toggleLogDetail(id) {
+  var row = document.getElementById('log-detail-' + id);
+  var arrow = document.getElementById('log-arrow-' + id);
+  if (row.style.display === 'none') {
+    row.style.display = '';
+    arrow.classList.add('open');
+  } else {
+    row.style.display = 'none';
+    arrow.classList.remove('open');
+  }
+}
+</script>
+{% endblock %}

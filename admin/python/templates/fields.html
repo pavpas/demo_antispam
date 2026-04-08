@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ project['name'] }} — {{ t('fields_title') }}{% endblock %}
+{% block content %}
+<div class="page-card">
+  <div class="detail-header">
+    <a href="{{ url_for('projects') }}" class="btn-back">&#8592; {{ t('back') }}</a>
+    <h1>{{ project['name'] }}</h1>
+    <span class="domain-badge">{{ project['domain'] }}</span>
+  </div>
+
+  <div class="tabs">
+    <a href="{{ url_for('detail', project_id=project['id'], tab='keys') }}" class="tab">{{ t('tab_keys') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='frontend') }}" class="tab">{{ t('tab_frontend') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='backend') }}" class="tab">{{ t('tab_backend') }}</a>
+    <a href="{{ url_for('rules', project_id=project['id']) }}" class="tab">{{ t('tab_rules') }}</a>
+    <a href="{{ url_for('logs', project_id=project['id']) }}" class="tab">{{ t('tab_logs') }}</a>
+    <a href="{{ url_for('fields', project_id=project['id']) }}" class="tab active">{{ t('tab_fields') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='testing') }}" class="tab">{{ t('tab_testing') }}</a>
+  </div>
+
+  <div class="tab-content">
+    <h3>{{ t('fields_title') }}</h3>
+
+    <form method="POST" class="rule-form-box" style="margin-bottom: 1.5rem;">
+      <input type="hidden" name="action" value="create">
+      <div class="form-row" style="align-items: flex-end;">
+        <div class="form-group" style="flex: 1;">
+          <label>{{ t('fields_name') }}</label>
+          <input type="text" name="field_name" placeholder="{{ t('fields_placeholder') }}" required>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn-primary">+ {{ t('fields_add') }}</button>
+        </div>
+      </div>
+    </form>
+
+    {% if not fields %}
+      <div class="empty-state">{{ t('fields_empty') }}</div>
+    {% else %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ t('fields_name') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field in fields %}
+          <tr>
+            <td>{{ field['field_name'] }}</td>
+            <td class="actions-cell">
+              <form method="POST" style="display:inline;" onsubmit="return confirm('{{ t('fields_delete_confirm') }} &laquo;{{ field['field_name'] }}&raquo;?')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="field_id" value="{{ field['id'] }}">
+                <button type="submit" class="btn-icon danger" title="{{ t('fields_delete') }}">&#10005;</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

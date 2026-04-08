@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}{{ project['name'] }} — {{ t('app_title') }}{% endblock %}
+{% block content %}
+<div class="page-card">
+  <div class="detail-header">
+    <a href="{{ url_for('projects') }}" class="btn-back">&#8592; {{ t('back') }}</a>
+    <h1>{{ project['name'] }}</h1>
+    <span class="domain-badge">{{ project['domain'] }}</span>
+  </div>
+
+  <div class="tabs">
+    <a href="{{ url_for('detail', project_id=project['id'], tab='keys') }}" class="tab {{ 'active' if tab == 'keys' }}">{{ t('tab_keys') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='frontend') }}" class="tab {{ 'active' if tab == 'frontend' }}">{{ t('tab_frontend') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='backend') }}" class="tab {{ 'active' if tab == 'backend' }}">{{ t('tab_backend') }}</a>
+    <a href="{{ url_for('rules', project_id=project['id']) }}" class="tab">{{ t('tab_rules') }}</a>
+    <a href="{{ url_for('logs', project_id=project['id']) }}" class="tab">{{ t('tab_logs') }}</a>
+    <a href="{{ url_for('fields', project_id=project['id']) }}" class="tab">{{ t('tab_fields') }}</a>
+    <a href="{{ url_for('detail', project_id=project['id'], tab='testing') }}" class="tab {{ 'active' if tab == 'testing' }}">{{ t('tab_testing') }}</a>
+  </div>
+
+  <div class="tab-content">
+  {% if tab == 'keys' %}
+    <div class="key-display">
+      <label>{{ t('key_public') }}</label>
+      <div class="key-row">
+        <code class="key-value">{{ project['public_key'] }}</code>
+        <button class="copy-btn" onclick="copyText('{{ project['public_key'] }}', this)">{{ t('copy') }}</button>
+      </div>
+    </div>
+    <div class="key-display">
+      <label>{{ t('key_private') }}</label>
+      <div class="key-row">
+        <code class="key-value secret" id="secretKey">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</code>
+        <button class="copy-btn" onclick="var el=document.getElementById('secretKey');if(el.dataset.shown){copyText('{{ project['private_key'] }}',this)}else{el.textContent='{{ project['private_key'] }}';el.dataset.shown='1';this.textContent='{{ t('copy') }}'}">{{ t('copy') }}</button>
+      </div>
+    </div>
+    <div class="warning-box">&#x26a0;&#xfe0f; {{ t('key_warning') }}</div>
+
+  {% elif tab == 'frontend' %}
+    <h3>{{ t('frontend_title') }}</h3>
+
+    <h4>{{ t('frontend_auto_title') }}</h4>
+    <p>{{ t('frontend_auto_desc') }}</p>
+    <p>{{ t('frontend_auto_step') }}</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">HTML</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;script src="{{ base_url }}/sdk.js?key={{ project['public_key'] }}"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <h4>{{ t('frontend_manual_title') }}</h4>
+    <p>{{ t('frontend_manual_desc') }}</p>
+    <p>{{ t('frontend_manual_step') }}</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">HTML</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;script src="{{ base_url }}/sdk.js?key={{ project['public_key'] }}&amp;auto=0"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <p>{{ t('frontend_manual_examples') }}</p>
+
+    <p class="example-label">{{ t('frontend_by_id') }}</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;script&gt;
+  AntiSpam.protect('#contactForm');
+&lt;/script&gt;</code></pre>
+    </div>
+
+    <p class="example-label">{{ t('frontend_by_class') }}</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;script&gt;
+  AntiSpam.protect('.protected-form');
+&lt;/script&gt;</code></pre>
+    </div>
+
+    <p class="example-label">{{ t('frontend_by_selector') }}</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;script&gt;
+  AntiSpam.protect('form[data-antispam]');
+  AntiSpam.protect(document.getElementById('myForm'));
+&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="info-box">{{ t('frontend_note') }}</div>
+
+  {% elif tab == 'backend' %}
+    {% set verify_url = base_url + '/api/v1/verify' %}
+    <h3>{{ t('backend_title') }}</h3>
+    <p>{{ t('backend_desc') }}</p>
+
+    <h4>{{ t('backend_endpoint') }}</h4>
+    <div class="code-block">
+      <div class="code-header"><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>POST {{ verify_url }}</code></pre>
+    </div>
+
+    <h4>{{ t('backend_request') }}</h4>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JSON</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>{
+  "secret": "{{ project['private_key'] }}",
+  "token": "TOKEN_FROM_FORM_FIELD_antispam_token",
+  "data": "optional custom string (e.g. form name, page URL)",
+  "filters": {
+    "field_name": "field_value"
+  }
+}</code></pre>
+    </div>
+
+    <div class="info-box">
+      <strong>data</strong> — optional string saved with the verification log. Use it to identify which form or page triggered the request.<br>
+      <strong>filters</strong> — optional key-value pairs for custom field filtering. Define fields in the "{{ t('tab_fields') }}" tab, then pass matching values here. They will appear as filterable columns in logs and statistics.
+    </div>
+
+    <h4>{{ t('backend_response') }}</h4>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JSON</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>{
+  "success": true,
+  "score": 0.87,
+  "action": "submit",
+  "timestamp": "2026-01-15T12:00:00Z",
+  "hostname": "{{ project['domain'] }}"
+}</code></pre>
+    </div>
+
+    <div class="info-box">{{ t('backend_score_note') }}</div>
+
+    <h3>{{ t('backend_examples') }}</h3>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">PHP</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>&lt;?php
+$token = $_POST['_antispam_token'] ?? '';
+$secret = '{{ project['private_key'] }}';
+
+$response = file_get_contents('{{ verify_url }}', false, stream_context_create([
+    'http' =&gt; [
+        'method' =&gt; 'POST',
+        'header' =&gt; 'Content-Type: application/json',
+        'content' =&gt; json_encode(['secret' =&gt; $secret, 'token' =&gt; $token])
+    ]
+]));
+
+$result = json_decode($response, true);
+if ($result['success'] &amp;&amp; $result['score'] &gt;= 0.5) {
+    // Human - process the form
+} else {
+    // Bot - reject the request
+}
+?&gt;</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>import requests
+
+token = request.form.get('_antispam_token', '')
+response = requests.post('{{ verify_url }}', json={
+    'secret': '{{ project['private_key'] }}',
+    'token': token
+})
+result = response.json()
+
+if result.get('success') and result.get('score', 0) &gt;= 0.5:
+    # Human
+    pass
+else:
+    # Bot
+    pass</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Node.js</span><button class="copy-btn" onclick="copyCode(this)">{{ t('copy') }}</button></div>
+      <pre><code>const token = req.body._antispam_token;
+const response = await fetch('{{ verify_url }}', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    secret: '{{ project['private_key'] }}',
+    token: token
+  })
+});
+const result = await response.json();
+
+if (result.success &amp;&amp; result.score &gt;= 0.5) {
+  // Human
+} else {
+  // Bot
+}</code></pre>
+    </div>
+  {% elif tab == 'testing' %}
+    <h3>{{ t('testing_title') }}</h3>
+    <p>{{ t('testing_desc') }}</p>
+
+    <form class="test-form" id="antispam-test-form" onsubmit="return false;">
+      <div class="form-group">
+        <label>{{ t('testing_name') }}</label>
+        <input type="text" name="name" value="Test User" required>
+      </div>
+      <div class="form-group">
+        <label>{{ t('testing_email') }}</label>
+        <input type="email" name="email" value="test@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>{{ t('testing_message') }}</label>
+        <textarea name="message" rows="3">Hello, this is a test message.</textarea>
+      </div>
+      <button type="button" class="btn-submit" id="test-submit-btn" onclick="submitTestForm()">{{ t('testing_submit') }}</button>
+    </form>
+
+    <div id="test-result"></div>
+
+    <script src="{{ base_url }}/sdk.js?key={{ project['public_key'] }}&auto=0"></script>
+    <script>
+    function submitTestForm() {
+      var btn = document.getElementById('test-submit-btn');
+      var resultDiv = document.getElementById('test-result');
+      btn.disabled = true;
+      btn.textContent = '{{ t("testing_verifying") }}';
+      resultDiv.innerHTML = '';
+      resultDiv.className = '';
+
+      if (typeof AntiSpam === 'undefined') {
+        resultDiv.className = 'test-result error';
+        resultDiv.innerHTML = '<strong>{{ t("testing_result_error") }}:</strong> {{ t("testing_no_token") }}';
+        btn.disabled = false;
+        btn.textContent = '{{ t("testing_submit") }}';
+        return;
+      }
+
+      AntiSpam.getToken(function(err, token) {
+        if (err || !token) {
+          resultDiv.className = 'test-result error';
+          resultDiv.innerHTML = '<strong>{{ t("testing_result_error") }}:</strong> {{ t("testing_no_token") }}';
+          btn.disabled = false;
+          btn.textContent = '{{ t("testing_submit") }}';
+          return;
+        }
+
+        fetch('{{ base_url }}/api/v1/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: '{{ project["private_key"] }}', token: token })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success && data.score >= 0.5) {
+            resultDiv.className = 'test-result success';
+            resultDiv.innerHTML = '<strong>{{ t("testing_result_human") }}</strong><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+          } else {
+            resultDiv.className = 'test-result bot';
+            resultDiv.innerHTML = '<strong>{{ t("testing_result_bot") }}</strong><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+          }
+        })
+        .catch(function(e) {
+          resultDiv.className = 'test-result error';
+          resultDiv.innerHTML = '<strong>{{ t("testing_result_error") }}:</strong> ' + e.message;
+        })
+        .finally(function() {
+          btn.disabled = false;
+          btn.textContent = '{{ t("testing_submit") }}';
+        });
+      });
+    }
+    </script>
+
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

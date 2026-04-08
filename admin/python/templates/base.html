@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ t('app_title') }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a href="/" class="header-left" style="text-decoration:none;color:inherit;">
+      <span class="header-logo">&#x1f6e1;</span>
+      <div>
+        <div class="header-title">{{ t('app_title') }}</div>
+        <div class="header-subtitle">{{ t('app_subtitle') }} (Python)</div>
+      </div>
+    </a>
+    <div class="header-right">
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('projects') }}" class="nav-link">{{ t('nav_projects') }}</a>
+        {% if lang == 'ru' %}
+          <a href="{{ url_for('set_lang', lang='en') }}" class="lang-btn">EN</a>
+        {% else %}
+          <a href="{{ url_for('set_lang', lang='ru') }}" class="lang-btn">RU</a>
+        {% endif %}
+        <span class="username">{{ session.get('username', '') }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-btn">{{ t('nav_logout') }}</a>
+      {% else %}
+        {% if lang == 'ru' %}
+          <a href="{{ url_for('set_lang', lang='en') }}" class="lang-btn">EN</a>
+        {% else %}
+          <a href="{{ url_for('set_lang', lang='ru') }}" class="lang-btn">RU</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </header>
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+  function copyCode(btn) {
+    var block = btn.closest('.code-block');
+    var code = block.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(function() {
+      btn.textContent = '{{ t("copied") }}';
+      setTimeout(function() { btn.textContent = '{{ t("copy") }}'; }, 2000);
+    });
+  }
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(function() {
+      btn.textContent = '{{ t("copied") }}';
+      setTimeout(function() { btn.textContent = '{{ t("copy") }}'; }, 2000);
+    });
+  }
+  </script>
+</body>
+</html>
